@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MRMSuite — Accesso Update Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060810;
+      --surface: #0d1117;
+      --surface-2: #161b27;
+      --border: rgba(255,255,255,0.07);
+      --accent: #3b82f6;
+      --accent-dim: rgba(59,130,246,0.12);
+      --accent-border: rgba(59,130,246,0.35);
+      --red: #ef4444;
+      --red-dim: rgba(239,68,68,0.1);
+      --red-border: rgba(239,68,68,0.3);
+      --text: #f1f5f9;
+      --text-2: #94a3b8;
+      --text-3: #475569;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Sfondo animato */
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+      top: -150px; left: -100px;
+      animation: float1 8s ease-in-out infinite;
+    }
+
+    .bg-orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%);
+      bottom: -100px; right: -80px;
+      animation: float2 10s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(30px, 20px); }
+    }
+
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-20px, -30px); }
+    }
+
+    .login-wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* Logo + titolo */
+    .login-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .login-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px; height: 60px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 16px;
+      font-size: 1.6rem;
+      margin-bottom: 16px;
+    }
+
+    .login-header h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .login-header p {
+      font-size: 0.85rem;
+      color: var(--text-3);
+      margin-top: 4px;
+    }
+
+    /* Card login */
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    input::placeholder { color: var(--text-3); }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login:hover:not(:disabled) {
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(59,130,246,0.35);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-login .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-box {
+      background: var(--red-dim);
+      border: 1px solid var(--red-border);
+      color: var(--red);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .error-box.visible { display: block; }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.75rem;
+      color: var(--text-3);
+    }
+
+    /* Shake animation su errore */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    .shake { animation: shake 0.4s ease; }
+  </style>
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div class="login-wrap">
+    <div class="login-header">
+      <div class="login-logo">⚡</div>
+      <h1>MRMSuite</h1>
+      <p>Update Center — Accesso riservato</p>
+    </div>
+
+    <div class="login-card" id="login-card">
+      <div class="error-box" id="error-box"></div>
+
+      <div class="form-group">
+        <label for="username">Utente</label>
+        <input type="text" id="username" placeholder="admin" autocomplete="username" autofocus>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <button class="btn-login" id="btn-login" onclick="doLogin()">
+        <span id="btn-text">Accedi →</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+
+      <div class="footer-note">
+        Credenziali default: admin / admin — cambiale dal pannello Sistema
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Vai alla dashboard se già autenticato
+    fetch('/auth/status').then(r => r.json()).then(d => {
+      if (d.authenticated) window.location.href = '/';
+    }).catch(() => {});
+
+    // Invio con Enter
+    document.getElementById('password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('username').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('password').focus();
+    });
+
+    async function doLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('btn-login');
+      const spinner = document.getElementById('spinner');
+      const btnText = document.getElementById('btn-text');
+      const errorBox = document.getElementById('error-box');
+
+      if (!username || !password) {
+        showError('Inserisci nome utente e password.');
+        return;
+      }
+
+      btn.disabled = true;
+      btnText.style.display = 'none';
+      spinner.style.display = 'block';
+      errorBox.classList.remove('visible');
+
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          btnText.textContent = '✓ Accesso effettuato';
+          btnText.style.display = 'block';
+          spinner.style.display = 'none';
+          setTimeout(() => { window.location.href = '/'; }, 500);
+        } else {
+          showError(data.message || 'Credenziali non valide.');
+          resetBtn();
+        }
+      } catch(e) {
+        showError('Errore di connessione al server.');
+        resetBtn();
+      }
+    }
+
+    function showError(msg) {
+      const errorBox = document.getElementById('error-box');
+      const card = document.getElementById('login-card');
+      errorBox.textContent = '⚠ ' + msg;
+      errorBox.classList.add('visible');
+      card.classList.remove('shake');
+      void card.offsetWidth; // reflow
+      card.classList.add('shake');
+    }
+
+    function resetBtn() {
+      const btn = document.getElementById('btn-login');
+      const spinner = document.getElementById('spinner');
+      const btnText = document.getElementById('btn-text');
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      btnText.style.display = 'block';
+      btnText.textContent = 'Accedi →';
+    }
+  </script>
+</body>
+</html>

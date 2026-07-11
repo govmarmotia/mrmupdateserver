@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MRMSuite — Update Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .sysinfo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .sysinfo-item {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+    }
+
+    .sysinfo-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .sysinfo-value {
+      font-size: 0.9rem;
+      color: var(--text);
+      font-weight: 500;
+      word-break: break-all;
+    }
+
+    .mem-bar {
+      height: 6px;
+      background: var(--surface-3);
+      border-radius: 6px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .mem-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 6px;
+      transition: width 0.5s ease;
+    }
+
+    .user-tag {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text-2);
+    }
+
+    .avatar {
+      width: 26px; height: 26px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .btn-logout {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-3);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      padding: 5px 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-logout:hover { border-color: var(--red-border); color: var(--red); background: var(--red-dim); }
+
+    .password-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 340px;
+    }
+
+    .password-form input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .password-form input:focus { border-color: var(--accent); }
+    :root {
+      --bg: #060810;
+      --surface: #0d1117;
+      --surface-2: #161b27;
+      --surface-3: #1e2535;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.15);
+      --accent: #3b82f6;
+      --accent-dim: rgba(59,130,246,0.12);
+      --accent-border: rgba(59,130,246,0.3);
+      --green: #22c55e;
+      --green-dim: rgba(34,197,94,0.1);
+      --green-border: rgba(34,197,94,0.3);
+      --red: #ef4444;
+      --red-dim: rgba(239,68,68,0.1);
+      --red-border: rgba(239,68,68,0.3);
+      --yellow: #f59e0b;
+      --yellow-dim: rgba(245,158,11,0.1);
+      --yellow-border: rgba(245,158,11,0.3);
+      --text: #f1f5f9;
+      --text-2: #94a3b8;
+      --text-3: #475569;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── SIDEBAR ──────────────────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 0 20px 28px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo h1 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+
+    .sidebar-logo p {
+      font-size: 0.72rem;
+      color: var(--text-3);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav {
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .nav-item:hover {
+      background: var(--surface-3);
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+    }
+
+    .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+    /* ─── MAIN CONTENT ─────────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      margin-left: 220px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 56px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      justify-content: space-between;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .server-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.8rem;
+      color: var(--text-2);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 30px;
+    }
+
+    .server-badge .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .content {
+      padding: 32px 28px;
+      flex: 1;
+    }
+
+    /* Pagine */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ─── CARDS ────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ─── STATUS GRID ──────────────────────────────────────────────────── */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-sub {
+      font-size: 0.75rem;
+      color: var(--text-2);
+      margin-top: 4px;
+    }
+
+    /* ─── BADGE ────────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 30px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+    .badge-red { background: var(--red-dim); color: var(--red); border: 1px solid var(--red-border); }
+    .badge-yellow { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow-border); }
+    .badge-blue { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); }
+
+    /* ─── UPLOAD AREA ──────────────────────────────────────────────────── */
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .file-slot {
+      background: var(--surface-2);
+      border: 1px dashed var(--border-hover);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .file-slot:hover, .file-slot.dragover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .file-slot.valid {
+      border-color: var(--green);
+      background: var(--green-dim);
+      border-style: solid;
+    }
+
+    .file-slot.error {
+      border-color: var(--red);
+      background: var(--red-dim);
+      border-style: solid;
+    }
+
+    .file-slot input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+
+    .file-slot-icon { font-size: 1.8rem; margin-bottom: 8px; }
+
+    .file-slot-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .file-slot-hint {
+      font-size: 0.72rem;
+      color: var(--text-3);
+    }
+
+    .file-slot-status {
+      margin-top: 10px;
+      font-size: 0.75rem;
+    }
+
+    /* ─── VALIDATION PANEL ─────────────────────────────────────────────── */
+    .validation-panel {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .validation-panel.visible { display: block; }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      font-size: 0.85rem;
+      color: var(--text-2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .check-item:last-child { border-bottom: none; }
+
+    .check-icon { font-size: 0.9rem; width: 18px; text-align: center; }
+    .check-ok { color: var(--green); }
+    .check-fail { color: var(--red); }
+    .check-warn { color: var(--yellow); }
+    .check-wait { color: var(--text-3); }
+
+    /* ─── PULSANTI ─────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); }
+    .btn-primary:disabled { background: var(--surface-3); color: var(--text-3); cursor: not-allowed; }
+
+    .btn-ghost {
+      background: var(--surface-3);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--border-hover); color: var(--text); }
+
+    .btn-danger {
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid var(--red-border);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+    .btn-danger:hover { background: var(--red); color: white; }
+
+    .btn-download {
+      background: var(--green-dim);
+      color: var(--green);
+      border: 1px solid var(--green-border);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+    .btn-download:hover { background: var(--green); color: white; }
+
+    /* ─── PROGRESS ─────────────────────────────────────────────────────── */
+    .progress-wrap { margin-top: 14px; display: none; }
+    .progress-wrap.visible { display: block; }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--surface-3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.1s;
+      width: 0%;
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--text-2);
+    }
+
+    /* ─── FEEDBACK ─────────────────────────────────────────────────────── */
+    .feedback {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      margin-top: 14px;
+      display: none;
+    }
+
+    .feedback.visible { display: block; }
+    .feedback.success { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+    .feedback.error { background: var(--red-dim); border: 1px solid var(--red-border); color: var(--red); }
+
+    /* ─── ARCHIVIO TABLE ───────────────────────────────────────────────── */
+    .archive-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .archive-table th {
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .archive-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+      color: var(--text-2);
+      vertical-align: middle;
+    }
+
+    .archive-table tr:last-child td { border-bottom: none; }
+
+    .archive-table tr:hover td {
+      background: var(--surface-2);
+    }
+
+    .archive-empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-3);
+      font-size: 0.875rem;
+    }
+
+    /* ─── CHANGELOG ────────────────────────────────────────────────────── */
+    .changelog-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 5px; }
+
+    /* ─── RESPONSIVE ───────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .upload-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>⚡ MRMSuite</h1>
+      <p>Update Center</p>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" onclick="showPage('dashboard', this)">
+        <span class="icon">📊</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('upload', this)">
+        <span class="icon">🚀</span> Pubblica Release
+      </button>
+      <button class="nav-item" onclick="showPage('archive', this)">
+        <span class="icon">📦</span> Archivio Versioni
+      </button>
+      <button class="nav-item" onclick="showPage('sistema', this)">
+        <span class="icon">⚙️</span> Sistema
+      </button>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <h2 id="page-title">Dashboard</h2>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="user-tag">
+          <div class="avatar" id="topbar-avatar">A</div>
+          <span id="topbar-user">admin</span>
+        </div>
+        <div class="server-badge">
+          <div class="dot"></div>
+          Online
+        </div>
+        <button class="btn-logout" onclick="doLogout()">Esci</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ═══════════════ DASHBOARD ═══════════════ -->
+      <div class="page active" id="page-dashboard">
+
+        <div class="status-grid">
+          <div class="stat-card">
+            <div class="stat-label">Versione Attiva</div>
+            <div class="stat-value" id="dash-version">—</div>
+            <div class="stat-sub" id="dash-date">Nessuna release</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Stato Server</div>
+            <div class="stat-value" style="font-size:1rem; margin-top:4px;" id="dash-status">
+              <span class="badge badge-yellow">Caricamento...</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Dimensione Installer</div>
+            <div class="stat-value" id="dash-size">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Checksum SHA512</div>
+            <div class="stat-value" style="font-size:0.7rem; word-break:break-all; color: var(--text-2);" id="dash-sha">—</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📋 File di Release Attivi</div>
+          <div id="dash-file-list">
+            <div style="color:var(--text-3); font-size:0.875rem;">Caricamento...</div>
+          </div>
+        </div>
+
+        <div class="card" id="dash-readme-card" style="display:none;">
+          <div class="card-title">📝 Note di Rilascio (readme.md)</div>
+          <div class="changelog-box" id="dash-readme"></div>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════ UPLOAD ═══════════════ -->
+      <div class="page" id="page-upload">
+
+        <div class="card">
+          <div class="card-title">🚀 Pubblica Nuovo Aggiornamento</div>
+
+          <div class="upload-grid">
+            <!-- INSTALLER -->
+            <div class="file-slot" id="slot-installer">
+              <input type="file" id="file-installer" accept=".exe">
+              <div class="file-slot-icon">💿</div>
+              <div class="file-slot-name">Installer (.exe) <span style="color:var(--red)">*</span></div>
+              <div class="file-slot-hint">Generato da: npm run build</div>
+              <div class="file-slot-status" id="status-installer"></div>
+            </div>
+
+            <!-- LATEST.YML -->
+            <div class="file-slot" id="slot-yml">
+              <input type="file" id="file-yml" accept=".yml,.yaml">
+              <div class="file-slot-icon">⚙️</div>
+              <div class="file-slot-name">latest.yml <span style="color:var(--red)">*</span></div>
+              <div class="file-slot-hint">Generato da: npm run build</div>
+              <div class="file-slot-status" id="status-yml"></div>
+            </div>
+
+            <!-- BLOCKMAP -->
+            <div class="file-slot" id="slot-blockmap">
+              <input type="file" id="file-blockmap" accept=".blockmap">
+              <div class="file-slot-icon">🗺️</div>
+              <div class="file-slot-name">Blockmap (.exe.blockmap)</div>
+              <div class="file-slot-hint">Opzionale — per aggiornamenti differenziali</div>
+              <div class="file-slot-status" id="status-blockmap"></div>
+            </div>
+
+            <!-- README.MD -->
+            <div class="file-slot" id="slot-readme">
+              <input type="file" id="file-readme" accept=".md">
+              <div class="file-slot-icon">📝</div>
+              <div class="file-slot-name">readme.md (Novità)</div>
+              <div class="file-slot-hint">Opzionale — note di rilascio</div>
+              <div class="file-slot-status" id="status-readme"></div>
+            </div>
+          </div>
+
+          <!-- PANNELLO VALIDAZIONE LIVE -->
+          <div class="validation-panel" id="validation-panel">
+            <div class="card-title" style="margin-bottom:12px;">🔍 Controlli Pre-Pubblicazione</div>
+            <div class="check-item">
+              <span class="check-icon check-wait" id="chk-installer-presence">○</span>
+              <span id="chk-installer-presence-txt">Installer .exe non ancora selezionato</span>
+            </div>
+            <div class="check-item">
+              <span class="check-icon check-wait" id="chk-installer-ext">○</span>
+              <span id="chk-installer-ext-txt">Verifica estensione .exe</span>
+            </div>
+            <div class="check-item">
+              <span class="check-icon check-wait" id="chk-yml-presence">○</span>
+              <span id="chk-yml-presence-txt">latest.yml non ancora selezionato</span>
+            </div>
+            <div class="check-item">
+              <span class="check-icon check-wait" id="chk-yml-content">○</span>
+              <span id="chk-yml-content-txt">Verifica contenuto latest.yml (version, sha512, path, size)</span>
+            </div>
+            <div class="check-item">
+              <span class="check-icon check-wait" id="chk-blockmap">○</span>
+              <span id="chk-blockmap-txt">Blockmap — opzionale</span>
+            </div>
+            <div class="check-item">
+              <span class="check-icon check-wait" id="chk-readme">○</span>
+              <span id="chk-readme-txt">readme.md — opzionale</span>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="btn-publish" disabled onclick="doUpload()">
+              🚀 Pubblica Aggiornamento
+            </button>
+            <button class="btn btn-ghost" onclick="resetUpload()">
+              ✕ Azzera
+            </button>
+            <span style="font-size:0.78rem; color:var(--text-3);">* campi obbligatori</span>
+          </div>
+
+          <div class="progress-wrap" id="progress-wrap">
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            <div class="progress-text">
+              <span id="progress-status">Caricamento in corso...</span>
+              <span id="progress-percent">0%</span>
+            </div>
+          </div>
+
+          <div class="feedback" id="feedback"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ ARCHIVIO ═══════════════ -->
+      <div class="page" id="page-archive">
+        <div class="card">
+          <div class="card-title">📦 Versioni Archiviate</div>
+          <div id="archive-container"><div class="archive-empty">Caricamento archivio...</div></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ SISTEMA ═══════════════ -->
+      <div class="page" id="page-sistema">
+
+        <div class="card">
+          <div class="card-title">🖥 Informazioni di Sistema</div>
+          <div class="sysinfo-grid" id="sysinfo-grid">
+            <div style="color:var(--text-3);font-size:0.875rem;">Caricamento...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">💾 Storage</div>
+          <div class="sysinfo-grid" id="sysinfo-storage">
+            <div style="color:var(--text-3);font-size:0.875rem;">Caricamento...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔑 Cambia Password</div>
+          <div class="password-form">
+            <input type="password" id="pwd-current" placeholder="Password attuale">
+            <input type="password" id="pwd-new" placeholder="Nuova password (min 6 caratteri)">
+            <input type="password" id="pwd-confirm" placeholder="Conferma nuova password">
+            <div style="display:flex;gap:10px;">
+              <button class="btn btn-primary" onclick="changePassword()">Aggiorna Password</button>
+            </div>
+            <div class="feedback" id="pwd-feedback"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── NAVIGAZIONE ─────────────────────────────────────────────────────────
+  const pageTitles = { dashboard: 'Dashboard', upload: 'Pubblica Release', archive: 'Archivio Versioni', sistema: 'Sistema' };
+
+  function showPage(name, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    if (btn) btn.classList.add('active');
+    document.getElementById('page-title').textContent = pageTitles[name] || name;
+    if (name === 'dashboard') loadDashboard();
+    if (name === 'archive') loadArchive();
+    if (name === 'sistema') loadSysinfo();
+  }
+
+  // ─── LOGOUT ───────────────────────────────────────────────────────────────
+  async function doLogout() {
+    await fetch('/auth/logout', { method: 'POST' }).catch(() => {});
+    window.location.href = '/login.html';
+  }
+
+  // Carica utente loggato
+  fetch('/auth/status').then(r => r.json()).then(d => {
+    if (!d.authenticated) { window.location.href = '/login.html'; return; }
+    document.getElementById('topbar-user').textContent = d.username || 'admin';
+    const av = document.getElementById('topbar-avatar');
+    av.textContent = (d.username || 'A')[0].toUpperCase();
+  }).catch(() => { window.location.href = '/login.html'; });
+
+  // ─── DASHBOARD ───────────────────────────────────────────────────────────
+  async function loadDashboard() {
+    try {
+      const res = await fetch('/status');
+      if (res.status === 401) { window.location.href = '/login.html'; return; }
+      const data = await res.json();
+
+      const statusEl = document.getElementById('dash-status');
+      const versionEl = document.getElementById('dash-version');
+      const dateEl = document.getElementById('dash-date');
+      const sizeEl = document.getElementById('dash-size');
+      const shaEl = document.getElementById('dash-sha');
+      const fileListEl = document.getElementById('dash-file-list');
+
+      if (!data.active) {
+        statusEl.innerHTML = '<span class="badge badge-red">● Nessuna Release</span>';
+        versionEl.textContent = '—';
+        dateEl.textContent = 'Nessuna release attiva';
+        sizeEl.textContent = '—';
+        shaEl.textContent = '—';
+        fileListEl.innerHTML = '<div style="color:var(--text-3);font-size:0.875rem;">Nessun file presente. Vai su "Pubblica Release" per caricare la prima versione.</div>';
+        return;
+      }
+
+      statusEl.innerHTML = '<span class="badge badge-green">● Attivo</span>';
+      versionEl.textContent = 'v' + (data.version || '—');
+      sizeEl.textContent = data.size ? formatBytes(data.size) : '—';
+      shaEl.textContent = data.sha512 || '—';
+      dateEl.textContent = formatDate(data.date);
+
+      fileListEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${data.fileName ? `<div class="check-item"><span class="check-icon check-ok">✓</span><span>${data.fileName}</span><span class="badge badge-blue" style="margin-left:auto;">installer</span></div>` : ''}
+          <div class="check-item"><span class="check-icon check-ok">✓</span><span>latest.yml</span><span class="badge badge-blue" style="margin-left:auto;">config</span></div>
+          ${data.hasReadme ? `<div class="check-item"><span class="check-icon check-ok">✓</span><span>readme.md</span><span class="badge badge-green" style="margin-left:auto;">changelog</span></div>` : `<div class="check-item"><span class="check-icon check-warn">!</span><span>readme.md non presente</span><span class="badge badge-yellow" style="margin-left:auto;">opzionale</span></div>`}
+        </div>`;
+
+      if (data.hasReadme) {
+        document.getElementById('dash-readme-card').style.display = 'block';
+        document.getElementById('dash-readme').textContent = data.readmeContent;
+      } else {
+        document.getElementById('dash-readme-card').style.display = 'none';
+      }
+    } catch (e) {
+      document.getElementById('dash-status').innerHTML = '<span class="badge badge-red">⚠ Errore connessione</span>';
+    }
+  }
+
+  // ─── SYSTEM INFO ──────────────────────────────────────────────────────────
+  async function loadSysinfo() {
+    try {
+      const res = await fetch('/sysinfo');
+      const d = await res.json();
+
+      const memPct = Math.round((d.usedMemory / d.totalMemory) * 100);
+      const uptimeStr = formatUptime(d.uptime);
+
+      document.getElementById('sysinfo-grid').innerHTML = `
+        <div class="sysinfo-item"><div class="sysinfo-label">Hostname</div><div class="sysinfo-value">${d.hostname}</div></div>
+        <div class="sysinfo-item"><div class="sysinfo-label">Sistema Operativo</div><div class="sysinfo-value">${d.platform} ${d.osRelease}</div></div>
+        <div class="sysinfo-item"><div class="sysinfo-label">Node.js</div><div class="sysinfo-value">${d.nodeVersion}</div></div>
+        <div class="sysinfo-item"><div class="sysinfo-label">Uptime Server</div><div class="sysinfo-value">${uptimeStr}</div></div>
+        <div class="sysinfo-item"><div class="sysinfo-label">CPU</div><div class="sysinfo-value">${d.cpuModel} × ${d.cpuCores} core</div></div>
+        <div class="sysinfo-item">
+          <div class="sysinfo-label">RAM — ${memPct}% usata</div>
+          <div class="sysinfo-value">${formatBytes(d.usedMemory)} / ${formatBytes(d.totalMemory)}</div>
+          <div class="mem-bar"><div class="mem-fill" style="width:${memPct}%"></div></div>
+        </div>
+        <div class="sysinfo-item"><div class="sysinfo-label">Versione Attiva</div><div class="sysinfo-value">${d.activeRelease ? 'v' + d.activeRelease : '—'}</div></div>
+        <div class="sysinfo-item"><div class="sysinfo-label">Versioni Archiviate</div><div class="sysinfo-value">${d.archivedVersions}</div></div>
+        <div class="sysinfo-item"><div class="sysinfo-label">Sessione Iniziata</div><div class="sysinfo-value">${formatDate(d.loginTime)}</div></div>
+        <div class="sysinfo-item"><div class="sysinfo-label">Versione Update Server</div><div class="sysinfo-value">${d.serverVersion}</div></div>
+      `;
+
+      document.getElementById('sysinfo-storage').innerHTML = `
+        <div class="sysinfo-item"><div class="sysinfo-label">Cartella Updates</div><div class="sysinfo-value" style="font-size:0.75rem;">${d.updatesDir}</div></div>
+        <div class="sysinfo-item"><div class="sysinfo-label">Dimensione Updates</div><div class="sysinfo-value">${formatBytes(d.updatesDirSize)}</div></div>
+        <div class="sysinfo-item"><div class="sysinfo-label">Cartella Archivio</div><div class="sysinfo-value" style="font-size:0.75rem;">${d.archiveDir}</div></div>
+        <div class="sysinfo-item"><div class="sysinfo-label">Dimensione Archivio</div><div class="sysinfo-value">${formatBytes(d.archiveDirSize)}</div></div>
+      `;
+    } catch(e) {
+      document.getElementById('sysinfo-grid').innerHTML = '<div style="color:var(--red);font-size:0.875rem;">⚠ Errore caricamento info di sistema.</div>';
+    }
+  }
+
+  async function changePassword() {
+    const cur = document.getElementById('pwd-current').value;
+    const nw = document.getElementById('pwd-new').value;
+    const cf = document.getElementById('pwd-confirm').value;
+    const fb = document.getElementById('pwd-feedback');
+
+    if (nw !== cf) {
+      fb.className = 'feedback error visible';
+      fb.textContent = '✗ Le password non coincidono';
+      return;
+    }
+
+    try {
+      const res = await fetch('/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: cur, newPassword: nw })
+      });
+      const data = await res.json();
+      fb.className = 'feedback ' + (data.success ? 'success' : 'error') + ' visible';
+      fb.textContent = (data.success ? '✓ ' : '✗ ') + data.message;
+      if (data.success) { document.getElementById('pwd-current').value = ''; document.getElementById('pwd-new').value = ''; document.getElementById('pwd-confirm').value = ''; }
+    } catch(e) {
+      fb.className = 'feedback error visible';
+      fb.textContent = '✗ Errore di rete';
+    }
+  }
+
+  // ─── ARCHIVIO ─────────────────────────────────────────────────────────────
+  async function loadArchive() {
+    const container = document.getElementById('archive-container');
+    try {
+      const res = await fetch('/archive-list');
+      const data = await res.json();
+
+      if (!data.versions || data.versions.length === 0) {
+        container.innerHTML = '<div class="archive-empty">📭 Nessuna versione archiviata.<br><small style="color:var(--text-3);margin-top:4px;display:block;">Le versioni precedenti verranno archiviate automaticamente al caricamento di una nuova release.</small></div>';
+        return;
+      }
+
+      let html = `<table class="archive-table">
+        <thead>
+          <tr>
+            <th>Versione</th>
+            <th>File</th>
+            <th>Dimensione</th>
+            <th>Data</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      data.versions.forEach(v => {
+        html += `<tr>
+          <td><span class="badge badge-blue">v${v.version}</span></td>
+          <td style="color:var(--text);font-family:monospace;font-size:0.8rem;">${v.fileName || '—'}</td>
+          <td>${v.size ? formatBytes(v.size) : '—'}</td>
+          <td>${formatDate(v.date)}</td>
+          <td style="display:flex;gap:8px;">
+            ${v.downloadUrl ? `<a href="${v.downloadUrl}" class="btn btn-download" download>⬇ Scarica</a>` : `<span style="color:var(--text-3);font-size:0.8rem;">N/D</span>`}
+            <button class="btn btn-danger" onclick="deleteVersion('${v.dir}', this)">🗑 Elimina</button>
+          </td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    } catch (e) {
+      container.innerHTML = '<div class="archive-empty" style="color:var(--red);">⚠ Errore nel caricamento dell\'archivio.</div>';
+    }
+  }
+
+  async function deleteVersion(dir, btn) {
+    if (!confirm(`Eliminare definitivamente la versione "${dir}" dall'archivio?`)) return;
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const res = await fetch('/archive/' + dir, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) loadArchive();
+      else alert('Errore: ' + data.message);
+    } catch(e) {
+      alert('Errore di rete');
+      btn.disabled = false;
+      btn.textContent = '🗑 Elimina';
+    }
+  }
+
+  // ─── VALIDAZIONE FILE ─────────────────────────────────────────────────────
+  let fileStates = { installer: null, yml: null, blockmap: null, readme: null };
+  let validationState = { installer: false, yml: false };
+
+  function setupSlot(slotId, inputId, key) {
+    const slot = document.getElementById(slotId);
+    const input = document.getElementById(inputId);
+
+    input.addEventListener('change', () => handleFile(input, key, slot));
+
+    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('dragover'); });
+    slot.addEventListener('dragleave', () => slot.classList.remove('dragover'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) {
+        const dt = new DataTransfer();
+        dt.items.add(e.dataTransfer.files[0]);
+        input.files = dt.files;
+        handleFile(input, key, slot);
+      }
+    });
+  }
+
+  function handleFile(input, key, slot) {
+    const file = input.files[0];
+    if (!file) return;
+    fileStates[key] = file;
+    document.getElementById('validation-panel').classList.add('visible');
+
+    if (key === 'installer') validateInstaller(file, slot);
+    else if (key === 'yml') validateYml(file, slot);
+    else if (key === 'blockmap') validateOptional(file, slot, 'chk-blockmap', 'chk-blockmap-txt', '.blockmap', 'Blockmap');
+    else if (key === 'readme') validateOptional(file, slot, 'chk-readme', 'chk-readme-txt', '.md', 'readme.md');
+
+    updatePublishButton();
+  }
+
+  function validateInstaller(file, slot) {
+    const isExe = file.name.toLowerCase().endsWith('.exe');
+    const sizeOk = file.size > 0;
+
+    setSlotState(slot, 'status-installer', isExe && sizeOk);
+    setCheck('chk-installer-presence', 'chk-installer-presence-txt', sizeOk, `Installer selezionato: ${file.name} (${formatBytes(file.size)})`);
+    setCheck('chk-installer-ext', 'chk-installer-ext-txt', isExe, isExe ? 'Estensione .exe ✓' : `Errore: il file deve essere .exe (trovato: ${file.name.split('.').pop()})`);
+    validationState.installer = isExe && sizeOk;
+  }
+
+  function validateYml(file, slot) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const content = e.target.result;
+      const hasVersion = /^version:\s*.+/m.test(content);
+      const hasSha = /sha512:\s*.+/m.test(content);
+      const hasPath = /^\s*path:\s*.+/m.test(content);
+      const hasSize = /size:\s*\d+/m.test(content);
+      const allOk = hasVersion && hasSha && hasPath && hasSize;
+
+      const issues = [];
+      if (!hasVersion) issues.push('version');
+      if (!hasSha) issues.push('sha512');
+      if (!hasPath) issues.push('path');
+      if (!hasSize) issues.push('size');
+
+      setSlotState(slot, 'status-yml', allOk);
+      setCheck('chk-yml-presence', 'chk-yml-presence-txt', true, `latest.yml selezionato: ${file.name}`);
+
+      if (allOk) {
+        const verMatch = content.match(/^version:\s*(.+)/m);
+        setCheck('chk-yml-content', 'chk-yml-content-txt', true, `Contenuto valido — versione rilevata: v${verMatch ? verMatch[1].trim() : '?'}`);
+      } else {
+        setCheck('chk-yml-content', 'chk-yml-content-txt', false, `Campi mancanti nel yml: ${issues.join(', ')}`);
+      }
+      validationState.yml = allOk;
+      updatePublishButton();
+    };
+    reader.readAsText(file);
+  }
+
+  function validateOptional(file, slot, chkId, txtId, ext, label) {
+    const ok = file.name.toLowerCase().endsWith(ext);
+    setSlotState(slot, null, ok, !ok);
+    if (ok) {
+      setCheckOk(chkId, txtId, `${label} selezionato: ${file.name} (${formatBytes(file.size)})`);
+    } else {
+      setCheckFail(chkId, txtId, `Errore: estensione attesa ${ext} — trovato .${file.name.split('.').pop()}`);
+    }
+  }
+
+  function setSlotState(slot, statusId, valid, error = false) {
+    slot.classList.remove('valid', 'error');
+    if (valid) slot.classList.add('valid');
+    else if (error) slot.classList.add('error');
+
+    if (statusId) {
+      const el = document.getElementById(statusId);
+      if (valid) el.innerHTML = `<span style="color:var(--green)">✓ Pronto</span>`;
+      else el.innerHTML = `<span style="color:var(--red)">✗ Errore</span>`;
+    }
+  }
+
+  function setCheck(iconId, txtId, ok, msg) {
+    const icon = document.getElementById(iconId);
+    const txt = document.getElementById(txtId);
+    icon.textContent = ok ? '✓' : '✗';
+    icon.className = 'check-icon ' + (ok ? 'check-ok' : 'check-fail');
+    txt.textContent = msg;
+  }
+
+  function setCheckOk(iconId, txtId, msg) { setCheck(iconId, txtId, true, msg); }
+  function setCheckFail(iconId, txtId, msg) { setCheck(iconId, txtId, false, msg); }
+
+  function updatePublishButton() {
+    document.getElementById('btn-publish').disabled = !(validationState.installer && validationState.yml);
+  }
+
+  // ─── UPLOAD ───────────────────────────────────────────────────────────────
+  function doUpload() {
+    const installer = fileStates.installer;
+    const yml = fileStates.yml;
+    if (!installer || !yml) return;
+
+    const formData = new FormData();
+    formData.append('installer', installer);
+    formData.append('yml', yml);
+    if (fileStates.blockmap) formData.append('blockmap', fileStates.blockmap);
+    if (fileStates.readme) formData.append('readme', fileStates.readme);
+
+    const xhr = new XMLHttpRequest();
+    const progressWrap = document.getElementById('progress-wrap');
+    const progressFill = document.getElementById('progress-fill');
+    const progressPct = document.getElementById('progress-percent');
+    const progressStatus = document.getElementById('progress-status');
+    const feedback = document.getElementById('feedback');
+    const btn = document.getElementById('btn-publish');
+
+    feedback.className = 'feedback';
+    feedback.style.display = 'none';
+    progressWrap.classList.add('visible');
+    btn.disabled = true;
+    btn.textContent = '⏳ Pubblicazione...';
+
+    xhr.upload.addEventListener('progress', e => {
+      if (e.lengthComputable) {
+        const p = Math.round((e.loaded / e.total) * 100);
+        progressFill.style.width = p + '%';
+        progressPct.textContent = p + '%';
+        progressStatus.textContent = p < 100 ? 'Caricamento in corso...' : 'Finalizzazione sul server...';
+      }
+    });
+
+    xhr.addEventListener('load', () => {
+      progressWrap.classList.remove('visible');
+      btn.textContent = '🚀 Pubblica Aggiornamento';
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (xhr.status === 200 && data.success) {
+          feedback.className = 'feedback success visible';
+          feedback.textContent = '✓ ' + data.message;
+          resetUpload();
+          setTimeout(() => { showPage('dashboard', document.querySelector('.nav-item')); }, 1500);
+        } else {
+          feedback.className = 'feedback error visible';
+          feedback.textContent = '✗ ' + (data.message || 'Errore sconosciuto');
+          btn.disabled = false;
+        }
+      } catch(e) {
+        feedback.className = 'feedback error visible';
+        feedback.textContent = '✗ Risposta non valida dal server';
+        btn.disabled = false;
+      }
+    });
+
+    xhr.addEventListener('error', () => {
+      progressWrap.classList.remove('visible');
+      feedback.className = 'feedback error visible';
+      feedback.textContent = '✗ Errore di rete durante il caricamento';
+      btn.disabled = false;
+      btn.textContent = '🚀 Pubblica Aggiornamento';
+    });
+
+    xhr.open('POST', '/upload');
+    xhr.send(formData);
+  }
+
+  function resetUpload() {
+    fileStates = { installer: null, yml: null, blockmap: null, readme: null };
+    validationState = { installer: false, yml: false };
+    ['installer', 'yml', 'blockmap', 'readme'].forEach(k => {
+      const input = document.getElementById('file-' + k);
+      if (input) input.value = '';
+      const slot = document.getElementById('slot-' + k);
+      if (slot) slot.classList.remove('valid', 'error');
+      const status = document.getElementById('status-' + k);
+      if (status) status.innerHTML = '';
+    });
+    document.getElementById('validation-panel').classList.remove('visible');
+    document.getElementById('btn-publish').disabled = true;
+    document.getElementById('progress-wrap').classList.remove('visible');
+    document.getElementById('progress-fill').style.width = '0%';
+  }
+
+  // ─── UTILITY ──────────────────────────────────────────────────────────────
+  function formatBytes(bytes) {
+    if (!bytes) return '—';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  }
+
+  function formatDate(raw) {
+    if (!raw) return '—';
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function formatUptime(seconds) {
+    if (!seconds) return '—';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+  }
+
+  // ─── INIT ─────────────────────────────────────────────────────────────────
+  setupSlot('slot-installer', 'file-installer', 'installer');
+  setupSlot('slot-yml', 'file-yml', 'yml');
+  setupSlot('slot-blockmap', 'file-blockmap', 'blockmap');
+  setupSlot('slot-readme', 'file-readme', 'readme');
+
+  loadDashboard();
+</script>
+</body>
+</html>

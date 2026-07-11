@@ -1,0 +1,5 @@
+node_modules/
+updates/
+archive/
+config.json
+.env
