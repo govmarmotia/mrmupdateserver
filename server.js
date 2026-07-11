@@ -3,116 +3,28 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const crypto = require('crypto');
 const os = require('os');
-const session = require('express-session');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const UPDATES_DIR = path.join(__dirname, 'updates');
 const ARCHIVE_DIR = path.join(__dirname, 'archive');
 const PUBLIC_DIR = path.join(__dirname, 'public');
-const CONFIG_FILE = path.join(__dirname, 'config.json');
 
 // Crea le directory necessarie
 [UPDATES_DIR, ARCHIVE_DIR, PUBLIC_DIR].forEach(dir => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
-// ─── CONFIG (credenziali) ─────────────────────────────────────────────────────
-function loadConfig() {
-  if (fs.existsSync(CONFIG_FILE)) {
-    try { return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); } catch(e) {}
-  }
-  // Credenziali di default al primo avvio
-  const defaults = {
-    username: 'admin',
-    passwordHash: crypto.createHash('sha256').update('admin').digest('hex'),
-    sessionSecret: crypto.randomBytes(32).toString('hex')
-  };
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(defaults, null, 2));
-  console.log('\n⚠️  CREDENZIALI DEFAULT — utente: admin | password: admin');
-  console.log('   Cambia la password dal pannello Impostazioni di Sistema.\n');
-  return defaults;
-}
-const config = loadConfig();
-
 // ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(session({
-  secret: config.sessionSecret,
-  resave: false,
-  saveUninitialized: false,
-  cookie: { maxAge: 8 * 60 * 60 * 1000 } // 8 ore
-}));
-
-// Serve la pagina di login senza auth
-app.use('/login.html', express.static(path.join(PUBLIC_DIR, 'login.html')));
-
-// Rotte pubbliche (electron-updater le deve raggiungere senza auth)
+// Serve la cartella public e le rotte
+app.use(express.static(PUBLIC_DIR));
 app.use('/updates', express.static(UPDATES_DIR));
 app.use('/archive', express.static(ARCHIVE_DIR));
-
-// ─── AUTH ENDPOINTS ───────────────────────────────────────────────────────────
-app.post('/auth/login', (req, res) => {
-  const { username, password } = req.body;
-  const cfg = loadConfig();
-  const hash = crypto.createHash('sha256').update(password || '').digest('hex');
-  if (username === cfg.username && hash === cfg.passwordHash) {
-    req.session.authenticated = true;
-    req.session.username = username;
-    req.session.loginTime = new Date().toISOString();
-    return res.json({ success: true, message: 'Accesso effettuato' });
-  }
-  return res.status(401).json({ success: false, message: 'Credenziali non valide' });
-});
-
-app.post('/auth/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.json({ success: true });
-  });
-});
-
-app.get('/auth/status', (req, res) => {
-  if (req.session && req.session.authenticated) {
-    return res.json({ authenticated: true, username: req.session.username, loginTime: req.session.loginTime });
-  }
-  res.json({ authenticated: false });
-});
-
-app.post('/auth/change-password', (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  const cfg = loadConfig();
-  const currentHash = crypto.createHash('sha256').update(currentPassword || '').digest('hex');
-  if (currentHash !== cfg.passwordHash) {
-    return res.status(401).json({ success: false, message: 'Password attuale non corretta' });
-  }
-  if (!newPassword || newPassword.length < 6) {
-    return res.status(400).json({ success: false, message: 'La nuova password deve essere di almeno 6 caratteri' });
-  }
-  cfg.passwordHash = crypto.createHash('sha256').update(newPassword).digest('hex');
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2));
-  res.json({ success: true, message: 'Password aggiornata con successo' });
-});
-
-// Middleware di autenticazione per tutte le altre rotte
-function requireAuth(req, res, next) {
-  // API chiamate da electron-updater — sempre permesse
-  if (req.path.startsWith('/updates') || req.path.startsWith('/archive')) return next();
-  if (req.session && req.session.authenticated) return next();
-  // API requests
-  if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
-    return res.status(401).json({ success: false, message: 'Non autenticato', redirect: '/login.html' });
-  }
-  return res.redirect('/login.html');
-}
-
-// Serve la cartella public solo dopo auth (tranne login.html)
-app.use(requireAuth);
-app.use(express.static(PUBLIC_DIR));
 
 // ─── MULTER CONFIG ─────────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
@@ -151,9 +63,7 @@ function parseYml(filePath) {
     const sha512Match = content.match(/^sha512:\s*['"]?(.+?)['"]?\s*$/m);
     const sizeMatch = content.match(/^size:\s*(\d+)/m);
 
-    // Pulizia data: rimuove eventuali apici e spazi
     let rawDate = dateMatch ? dateMatch[1].trim().replace(/['"]/g, '') : null;
-    // Verifica che sia una data valida prima di restituirla
     const parsedDate = rawDate ? new Date(rawDate) : null;
     const validDate = parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate.toISOString() : null;
 
@@ -238,39 +148,26 @@ app.get('/status', (req, res) => {
 app.get('/sysinfo', (req, res) => {
   try {
     const ymlPath = path.join(UPDATES_DIR, 'latest.yml');
-    const archiveVersions = fs.existsSync(ARCHIVE_DIR)
-      ? fs.readdirSync(ARCHIVE_DIR).filter(d => fs.statSync(path.join(ARCHIVE_DIR, d)).isDirectory()).length
-      : 0;
-
-    const cpus = os.cpus();
-    const totalMem = os.totalmem();
-    const freeMem = os.freemem();
-
+    const activeVer = fs.existsSync(ymlPath) ? parseYml(ymlPath).version : null;
+    
     res.json({
-      // Server
-      serverVersion: '1.0.0',
+      serverVersion: '2.0.0',
       nodeVersion: process.version,
       platform: os.platform(),
       osRelease: os.release(),
       hostname: os.hostname(),
-      uptime: process.uptime(),
-      // Risorse
-      cpuModel: cpus[0]?.model || 'N/D',
-      cpuCores: cpus.length,
-      totalMemory: totalMem,
-      freeMemory: freeMem,
-      usedMemory: totalMem - freeMem,
-      // Storage
+      uptime: os.uptime(),
+      cpuModel: os.cpus()[0]?.model || 'Sconosciuto',
+      cpuCores: os.cpus().length,
+      totalMemory: os.totalmem(),
+      freeMemory: os.freemem(),
+      usedMemory: os.totalmem() - os.freemem(),
       updatesDir: UPDATES_DIR,
       archiveDir: ARCHIVE_DIR,
       updatesDirSize: getDirSize(UPDATES_DIR),
       archiveDirSize: getDirSize(ARCHIVE_DIR),
-      // Release info
-      activeRelease: fs.existsSync(ymlPath) ? parseYml(ymlPath).version : null,
-      archivedVersions: archiveVersions,
-      // Sessione
-      loginTime: req.session?.loginTime || null,
-      username: req.session?.username || null
+      activeRelease: activeVer,
+      archivedVersions: fs.existsSync(ARCHIVE_DIR) ? fs.readdirSync(ARCHIVE_DIR).filter(f => fs.statSync(path.join(ARCHIVE_DIR, f)).isDirectory()).length : 0
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

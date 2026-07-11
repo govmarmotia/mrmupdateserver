@@ -70,41 +70,11 @@
       color: var(--accent);
     }
 
-    .btn-logout {
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-3);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.78rem;
-      padding: 5px 11px;
-      cursor: pointer;
-      transition: all 0.15s;
     }
-
-    .btn-logout:hover { border-color: var(--red-border); color: var(--red); background: var(--red-dim); }
-
+    
     .password-form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      max-width: 340px;
+      display: none;
     }
-
-    .password-form input {
-      width: 100%;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.875rem;
-      padding: 9px 12px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .password-form input:focus { border-color: var(--accent); }
     :root {
       --bg: #060810;
       --surface: #0d1117;
@@ -624,15 +594,10 @@
     <div class="topbar">
       <h2 id="page-title">Dashboard</h2>
       <div style="display:flex;align-items:center;gap:12px;">
-        <div class="user-tag">
-          <div class="avatar" id="topbar-avatar">A</div>
-          <span id="topbar-user">admin</span>
-        </div>
         <div class="server-badge">
           <div class="dot"></div>
           Online
         </div>
-        <button class="btn-logout" onclick="doLogout()">Esci</button>
       </div>
     </div>
 
@@ -797,19 +762,6 @@
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-title">🔑 Cambia Password</div>
-          <div class="password-form">
-            <input type="password" id="pwd-current" placeholder="Password attuale">
-            <input type="password" id="pwd-new" placeholder="Nuova password (min 6 caratteri)">
-            <input type="password" id="pwd-confirm" placeholder="Conferma nuova password">
-            <div style="display:flex;gap:10px;">
-              <button class="btn btn-primary" onclick="changePassword()">Aggiorna Password</button>
-            </div>
-            <div class="feedback" id="pwd-feedback"></div>
-          </div>
-        </div>
-
       </div>
 
     </div>
@@ -831,25 +783,10 @@
     if (name === 'sistema') loadSysinfo();
   }
 
-  // ─── LOGOUT ───────────────────────────────────────────────────────────────
-  async function doLogout() {
-    await fetch('/auth/logout', { method: 'POST' }).catch(() => {});
-    window.location.href = '/login.html';
-  }
-
-  // Carica utente loggato
-  fetch('/auth/status').then(r => r.json()).then(d => {
-    if (!d.authenticated) { window.location.href = '/login.html'; return; }
-    document.getElementById('topbar-user').textContent = d.username || 'admin';
-    const av = document.getElementById('topbar-avatar');
-    av.textContent = (d.username || 'A')[0].toUpperCase();
-  }).catch(() => { window.location.href = '/login.html'; });
-
   // ─── DASHBOARD ───────────────────────────────────────────────────────────
   async function loadDashboard() {
     try {
       const res = await fetch('/status');
-      if (res.status === 401) { window.location.href = '/login.html'; return; }
       const data = await res.json();
 
       const statusEl = document.getElementById('dash-status');
@@ -915,7 +852,6 @@
         </div>
         <div class="sysinfo-item"><div class="sysinfo-label">Versione Attiva</div><div class="sysinfo-value">${d.activeRelease ? 'v' + d.activeRelease : '—'}</div></div>
         <div class="sysinfo-item"><div class="sysinfo-label">Versioni Archiviate</div><div class="sysinfo-value">${d.archivedVersions}</div></div>
-        <div class="sysinfo-item"><div class="sysinfo-label">Sessione Iniziata</div><div class="sysinfo-value">${formatDate(d.loginTime)}</div></div>
         <div class="sysinfo-item"><div class="sysinfo-label">Versione Update Server</div><div class="sysinfo-value">${d.serverVersion}</div></div>
       `;
 
@@ -927,34 +863,6 @@
       `;
     } catch(e) {
       document.getElementById('sysinfo-grid').innerHTML = '<div style="color:var(--red);font-size:0.875rem;">⚠ Errore caricamento info di sistema.</div>';
-    }
-  }
-
-  async function changePassword() {
-    const cur = document.getElementById('pwd-current').value;
-    const nw = document.getElementById('pwd-new').value;
-    const cf = document.getElementById('pwd-confirm').value;
-    const fb = document.getElementById('pwd-feedback');
-
-    if (nw !== cf) {
-      fb.className = 'feedback error visible';
-      fb.textContent = '✗ Le password non coincidono';
-      return;
-    }
-
-    try {
-      const res = await fetch('/auth/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword: cur, newPassword: nw })
-      });
-      const data = await res.json();
-      fb.className = 'feedback ' + (data.success ? 'success' : 'error') + ' visible';
-      fb.textContent = (data.success ? '✓ ' : '✗ ') + data.message;
-      if (data.success) { document.getElementById('pwd-current').value = ''; document.getElementById('pwd-new').value = ''; document.getElementById('pwd-confirm').value = ''; }
-    } catch(e) {
-      fb.className = 'feedback error visible';
-      fb.textContent = '✗ Errore di rete';
     }
   }
 
