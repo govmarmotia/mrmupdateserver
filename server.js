@@ -21,6 +21,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Reindirizza eventuali tentativi di accesso a login.html verso la home (per la cache del browser)
+app.get('/login.html', (req, res) => res.redirect('/'));
+
 // Serve la cartella public e le rotte
 app.use(express.static(PUBLIC_DIR));
 app.use('/updates', express.static(UPDATES_DIR));
