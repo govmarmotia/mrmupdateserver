@@ -56,22 +56,6 @@ app.use('/login.html', express.static(path.join(PUBLIC_DIR, 'login.html')));
 app.use('/updates', express.static(UPDATES_DIR));
 app.use('/archive', express.static(ARCHIVE_DIR));
 
-// Middleware di autenticazione per tutte le altre rotte
-function requireAuth(req, res, next) {
-  // API chiamate da electron-updater — sempre permesse
-  if (req.path.startsWith('/updates') || req.path.startsWith('/archive')) return next();
-  if (req.session && req.session.authenticated) return next();
-  // API requests
-  if (req.xhr || req.headers.accept?.includes('application/json')) {
-    return res.status(401).json({ success: false, message: 'Non autenticato', redirect: '/login.html' });
-  }
-  return res.redirect('/login.html');
-}
-
-// Serve la cartella public solo dopo auth (tranne login.html)
-app.use(requireAuth);
-app.use(express.static(PUBLIC_DIR));
-
 // ─── AUTH ENDPOINTS ───────────────────────────────────────────────────────────
 app.post('/auth/login', (req, res) => {
   const { username, password } = req.body;
@@ -113,6 +97,22 @@ app.post('/auth/change-password', (req, res) => {
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2));
   res.json({ success: true, message: 'Password aggiornata con successo' });
 });
+
+// Middleware di autenticazione per tutte le altre rotte
+function requireAuth(req, res, next) {
+  // API chiamate da electron-updater — sempre permesse
+  if (req.path.startsWith('/updates') || req.path.startsWith('/archive')) return next();
+  if (req.session && req.session.authenticated) return next();
+  // API requests
+  if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+    return res.status(401).json({ success: false, message: 'Non autenticato', redirect: '/login.html' });
+  }
+  return res.redirect('/login.html');
+}
+
+// Serve la cartella public solo dopo auth (tranne login.html)
+app.use(requireAuth);
+app.use(express.static(PUBLIC_DIR));
 
 // ─── MULTER CONFIG ─────────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
